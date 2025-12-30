@@ -43,7 +43,7 @@
             </form>
 
             <div class="auth-links">
-              <a href="#" id="link-signup" class="link">Sign up for a new account</a>
+              <a href="#" id="link-signup" class="link">Sign up a new account</a>
               <a href="#" id="link-forgot" class="link">Forgot password?</a>
             </div>
           </div>
@@ -152,46 +152,5 @@
 
     <script src="./config.js"></script>
     <script src="./app.js"></script>
-    <script>
-      // Simple view switching
-      const loginView = document.getElementById('login-view');
-      const signupView = document.getElementById('signup-view');
-      const forgotView = document.getElementById('forgot-view');
-
-      // Show signup
-      document.getElementById('link-signup').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.hidden = true;
-        signupView.hidden = false;
-        forgotView.hidden = true;
-      });
-
-      // Show forgot password
-      document.getElementById('link-forgot').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.hidden = true;
-        signupView.hidden = true;
-        forgotView.hidden = false;
-      });
-
-      // Back to login from signup
-      document.getElementById('link-back-login').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.hidden = false;
-        signupView.hidden = true;
-        forgotView.hidden = true;
-      });
-
-      // Back to login from forgot password
-      document.getElementById('link-back-login-2').addEventListener('click', (e) => {
-        e.preventDefault();
-        loginView.hidden = false;
-        signupView.hidden = true;
-        forgotView.hidden = true;
-      });
-
-      // Set current year
-      document.getElementById('year').textContent = new Date().getFullYear();
-    </script>
   </body>
 </html>

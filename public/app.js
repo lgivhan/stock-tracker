@@ -1,169 +1,226 @@
-// ---------------------------
-// Config (public, not secrets)
-// ---------------------------
-const CONFIG = window.APP_CONFIG || null;
+// ============================================
+// STOCK TRACKER - Main Application Logic
+// ============================================
 
-// ---------------------------
-// DOM selectors
-// ---------------------------
-const els = {
-  authView: document.getElementById("auth-view"),
-  dashView: document.getElementById("dashboard-view"),
-  logoutBtn: document.getElementById("btn-logout"),
+// Initialize Supabase client
+const supabaseClient = supabase.createClient(
+  CONFIG.SUPABASE_URL,
+  CONFIG.SUPABASE_PUBLISHABLE_KEY
+);
 
-  loginForm: document.getElementById("login-form"),
-  signupForm: document.getElementById("signup-form"),
-  loginMsg: document.getElementById("login-msg"),
-  signupMsg: document.getElementById("signup-msg"),
+// DOM Elements - Views
+const loginView = document.getElementById('login-view');
+const signupView = document.getElementById('signup-view');
+const forgotView = document.getElementById('forgot-view');
+const dashboardView = document.getElementById('dashboard-view');
 
-  userPill: document.getElementById("user-pill"),
+// DOM Elements - Forms
+const loginForm = document.getElementById('login-form');
+const signupForm = document.getElementById('signup-form');
+const forgotForm = document.getElementById('forgot-form');
+const addStockForm = document.getElementById('add-stock-form');
 
-  addStockForm: document.getElementById("add-stock-form"),
-  symbolInput: document.getElementById("symbol-input"),
-  stocksTbody: document.getElementById("stocks-tbody"),
+// DOM Elements - Messages
+const loginMsg = document.getElementById('login-msg');
+const signupMsg = document.getElementById('signup-msg');
+const forgotMsg = document.getElementById('forgot-msg');
+const userPill = document.getElementById('user-pill');
 
-  year: document.getElementById("year"),
-};
+// DOM Elements - Buttons & Links
+const logoutBtn = document.getElementById('btn-logout');
 
-// ---------------------------
-// App state
-// ---------------------------
-const state = {
-  user: null,          // later: Supabase user object
-  watchlist: [],       // later: rows from DB
-};
+// ============================================
+// VIEW SWITCHING
+// ============================================
 
-// ---------------------------
-// Helpers
-// ---------------------------
-function setMessage(el, msg) {
-  if (!el) return;
-  el.textContent = msg || "";
+function showLoginView() {
+  loginView.hidden = false;
+  signupView.hidden = true;
+  forgotView.hidden = true;
+  dashboardView.hidden = true;
+  logoutBtn.hidden = true;
 }
 
-function showAuth() {
-  els.authView.hidden = false;
-  els.dashView.hidden = true;
-  if (els.logoutBtn) els.logoutBtn.hidden = true;
+function showSignupView() {
+  loginView.hidden = true;
+  signupView.hidden = false;
+  forgotView.hidden = true;
+  dashboardView.hidden = true;
+  logoutBtn.hidden = true;
 }
 
-function showDashboard() {
-  els.authView.hidden = true;
-  els.dashView.hidden = false;
-  if (els.logoutBtn) els.logoutBtn.hidden = false;
+function showForgotView() {
+  loginView.hidden = true;
+  signupView.hidden = true;
+  forgotView.hidden = false;
+  dashboardView.hidden = true;
+  logoutBtn.hidden = true;
 }
 
-// Render table rows (placeholder stats for now)
-function renderWatchlist() {
-  const rows = state.watchlist;
+function showDashboardView(user) {
+  loginView.hidden = true;
+  signupView.hidden = true;
+  forgotView.hidden = true;
+  dashboardView.hidden = false;
+  logoutBtn.hidden = false;
+  
+  // Display user email
+  userPill.textContent = user.email;
+  
+  // Load user's watchlist
+  loadWatchlist();
+}
 
-  if (!rows.length) {
-    els.stocksTbody.innerHTML = `<tr><td colspan="6" class="muted">No stocks yet.</td></tr>`;
-    return;
+// ============================================
+// AUTHENTICATION
+// ============================================
+
+// Check if user is already logged in
+async function checkAuth() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  
+  if (user) {
+    showDashboardView(user);
+  } else {
+    showLoginView();
   }
-
-  els.stocksTbody.innerHTML = rows
-    .map((r) => {
-      return `
-        <tr>
-          <td>${r.symbol}</td>
-          <td>${r.highClose ?? "-"}</td>
-          <td>${r.lowClose ?? "-"}</td>
-          <td>${r.highOpen ?? "-"}</td>
-          <td>${r.lowOpen ?? "-"}</td>
-          <td>${r.updatedAt ?? "-"}</td>
-        </tr>
-      `;
-    })
-    .join("");
 }
 
-// ---------------------------
-// Placeholder "auth" for Phase 1
-// ---------------------------
-function fakeLogin(email) {
-  state.user = { email };
-  els.userPill.textContent = email;
-  showDashboard();
-}
-
-function logout() {
-  state.user = null;
-  state.watchlist = [];
-  els.userPill.textContent = "";
-  renderWatchlist();
-  showAuth();
-}
-
-// ---------------------------
-// Event wiring
-// ---------------------------
-function bindEvents() {
-  els.loginForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const data = new FormData(els.loginForm);
-    const email = String(data.get("email") || "").trim();
-    const password = String(data.get("password") || "");
-
-    // Phase 1: fake
-    if (!email || !password) return setMessage(els.loginMsg, "Email + password required.");
-    setMessage(els.loginMsg, "");
-    fakeLogin(email);
+// Login
+loginForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  loginMsg.textContent = 'Logging in...';
+  
+  const email = loginForm.email.value;
+  const password = loginForm.password.value;
+  
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
   });
-
-  els.signupForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const data = new FormData(els.signupForm);
-    const email = String(data.get("email") || "").trim();
-    const password = String(data.get("password") || "");
-
-    // Phase 1: fake
-    if (!email || !password) return setMessage(els.signupMsg, "Email + password required.");
-    setMessage(els.signupMsg, "");
-    fakeLogin(email);
-  });
-
-  els.logoutBtn?.addEventListener("click", () => logout());
-
-  els.addStockForm?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const symbol = (els.symbolInput.value || "").trim().toUpperCase();
-    if (!symbol) return;
-
-    // Phase 1: add locally (later: insert into Supabase)
-    if (state.watchlist.some((s) => s.symbol === symbol)) {
-      els.symbolInput.value = "";
-      return;
-    }
-
-    state.watchlist.unshift({
-      symbol,
-      highClose: null,
-      lowClose: null,
-      highOpen: null,
-      lowOpen: null,
-      updatedAt: new Date().toLocaleString(),
-    });
-
-    els.symbolInput.value = "";
-    renderWatchlist();
-  });
-}
-
-// ---------------------------
-// Boot
-// ---------------------------
-function init() {
-  if (els.year) els.year.textContent = String(new Date().getFullYear());
-
-  // If config is missing, just warn (Phase 1 is UI-only)
-  if (!CONFIG) {
-    console.warn("Missing public/config.js — UI will still work, Supabase wiring later.");
+  
+  if (error) {
+    loginMsg.textContent = `Error: ${error.message}`;
+    loginMsg.style.color = '#ef4444';
+  } else {
+    loginMsg.textContent = 'Success! Loading dashboard...';
+    loginMsg.style.color = '#10b981';
+    showDashboardView(data.user);
   }
+});
 
-  bindEvents();
-  showAuth();
-  renderWatchlist();
+// Sign Up
+signupForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  signupMsg.textContent = 'Creating account...';
+  
+  const email = signupForm.email.value;
+  const password = signupForm.password.value;
+  
+  const { data, error } = await supabaseClient.auth.signUp({
+    email,
+    password
+  });
+  
+  if (error) {
+    signupMsg.textContent = `Error: ${error.message}`;
+    signupMsg.style.color = '#ef4444';
+  } else {
+    signupMsg.textContent = 'Account created! You can now log in.';
+    signupMsg.style.color = '#10b981';
+    
+    // Switch to login view after 2 seconds
+    setTimeout(() => {
+      showLoginView();
+      signupForm.reset();
+      signupMsg.textContent = '';
+    }, 2000);
+  }
+});
+
+// Forgot Password
+forgotForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  forgotMsg.textContent = 'Sending reset link...';
+  
+  const email = forgotForm.email.value;
+  
+  const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.origin
+  });
+  
+  if (error) {
+    forgotMsg.textContent = `Error: ${error.message}`;
+    forgotMsg.style.color = '#ef4444';
+  } else {
+    forgotMsg.textContent = 'Reset link sent! Check your email.';
+    forgotMsg.style.color = '#10b981';
+  }
+});
+
+// Logout
+logoutBtn.addEventListener('click', async () => {
+  await supabaseClient.auth.signOut();
+  showLoginView();
+});
+
+// ============================================
+// WATCHLIST MANAGEMENT
+// ============================================
+
+async function loadWatchlist() {
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  
+  if (!user) return;
+  
+  // For now, just show placeholder
+  // Next phase: fetch from database and display
+  const tbody = document.getElementById('stocks-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="muted">No stocks yet. Add one above!</td></tr>';
 }
 
-init();
+// Add Stock (placeholder - will implement in next phase)
+addStockForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const symbol = document.getElementById('symbol-input').value.toUpperCase();
+  
+  // TODO: Add to database and fetch stock data
+  alert(`TODO: Add ${symbol} to watchlist and fetch data from API`);
+  
+  addStockForm.reset();
+});
+
+// ============================================
+// VIEW NAVIGATION LINKS
+// ============================================
+
+document.getElementById('link-signup').addEventListener('click', (e) => {
+  e.preventDefault();
+  showSignupView();
+});
+
+document.getElementById('link-forgot').addEventListener('click', (e) => {
+  e.preventDefault();
+  showForgotView();
+});
+
+document.getElementById('link-back-login').addEventListener('click', (e) => {
+  e.preventDefault();
+  showLoginView();
+});
+
+document.getElementById('link-back-login-2').addEventListener('click', (e) => {
+  e.preventDefault();
+  showLoginView();
+});
+
+// ============================================
+// INITIALIZE APP
+// ============================================
+
+// Set current year in footer
+document.getElementById('year').textContent = new Date().getFullYear();
+
+// Check authentication status on page load
+checkAuth();
