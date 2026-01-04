@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Stock Tracker</title>
+    <link rel="stylesheet" href="./style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+
+  <body>
+    <header class="site-header">
+      <div class="container header-inner">
+        <div>
+          <h1>Stock Tracker</h1>
+          <p class="muted">Log in, add stocks, and view highs/lows.</p>
+        </div>
+        <div class="header-actions">
+          <button id="btn-logout" class="btn btn-secondary" hidden>Log out</button>
+        </div>
+      </div>
+    </header>
+    
+    <div class="page">
+      <main>
+        <!-- LOGIN VIEW -->
+        <section id="login-view" class="view">
+          <div class="card auth-card">
+            <h2>Log in</h2>
+            <form id="login-form" class="stack">
+              <label>
+                Email
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+
+              <label>
+                Password
+                <input name="password" type="password" autocomplete="current-password" required />
+              </label>
+
+              <button class="btn btn-primary" type="submit">Log in</button>
+              <p class="muted small" id="login-msg"></p>
+            </form>
+
+            <div class="auth-links">
+              <a href="#" id="link-signup" class="link">Set up a new account</a>
+              <a href="#" id="link-forgot" class="link">Forgot password?</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- SIGNUP VIEW (hidden by default) -->
+        <section id="signup-view" class="view" hidden>
+          <div class="card auth-card">
+            <h2>Sign up</h2>
+            <form id="signup-form" class="stack">
+              <label>
+                Email
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+
+              <label>
+                Password
+                <input name="password" type="password" autocomplete="new-password" required />
+              </label>
+
+              <button class="btn btn-primary" type="submit">Create account</button>
+              <p class="muted small" id="signup-msg"></p>
+            </form>
+
+            <div class="auth-links">
+              <a href="#" id="link-back-login" class="link">Already have an account? Log in</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- FORGOT PASSWORD VIEW (hidden by default) -->
+        <section id="forgot-view" class="view" hidden>
+          <div class="card auth-card">
+            <h2>Reset password</h2>
+            <p class="muted small">Enter your email and we'll send you a password reset link.</p>
+            <form id="forgot-form" class="stack">
+              <label>
+                Email
+                <input name="email" type="email" autocomplete="email" required />
+              </label>
+
+              <button class="btn btn-primary" type="submit">Send reset link</button>
+              <p class="muted small" id="forgot-msg"></p>
+            </form>
+
+            <div class="auth-links">
+              <a href="#" id="link-back-login-2" class="link">Back to log in</a>
+            </div>
+          </div>
+        </section>
+
+        <!-- DASHBOARD VIEW (hidden by default) -->
+        <section id="dashboard-view" class="view" hidden>
+          <div class="card">
+            <div class="row between">
+              <h2>Dashboard</h2>
+              <p class="muted small" id="user-pill"></p>
+            </div>
+
+            <form id="add-stock-form" class="row wrap">
+              <label class="grow">
+                Stock symbol
+                <input id="symbol-input" name="symbol" type="text" placeholder="AAPL" maxlength="10" />
+              </label>
+              <button class="btn btn-primary" type="submit">Add</button>
+            </form>
+
+            <p class="muted small">
+              For now this is UI-only. Next phase will save to Supabase + calculate stats.
+            </p>
+          </div>
+
+          <div class="card">
+            <h3>Your stocks</h3>
+
+            <div class="table-wrap">
+              <table class="table" id="stocks-table">
+                <thead>
+                  <tr>
+                    <th>Symbol</th>
+                    <th>High Close</th>
+                    <th>Low Close</th>
+                    <th>High Open</th>
+                    <th>Low Open</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody id="stocks-tbody">
+                  <tr>
+                    <td colspan="6" class="muted">No stocks yet.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Mobile-friendly card list (optional) -->
+            <div class="cards" id="stocks-cards" hidden></div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <footer class="container footer muted small">
+      <span>© <span id="year"></span> Stock Tracker</span>
+    </footer>
+
+    <script src="./config.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
