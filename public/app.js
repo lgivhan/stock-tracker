@@ -172,7 +172,7 @@ logoutBtn.addEventListener("click", async () => {
 
 // Fetch time series data from Alpha Vantage
 async function fetchStockData(symbol) {
-  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=full&apikey=${CONFIG.STOCK_API_KEY}`;
+  const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${symbol}&outputsize=compact&apikey=${CONFIG.STOCK_API_KEY}`;
 
   try {
     const response = await fetch(url);
@@ -203,39 +203,45 @@ async function fetchStockData(symbol) {
 
 // Calculate yearly highs and lows from time series data
 function calculateYearlyStats(timeSeriesData) {
-  const timeSeries = timeSeriesData["Time Series (Daily)"];
-  const dates = Object.keys(timeSeries);
+  const timeSeries = timeSeriesData['Time Series (Daily)'];
+  if (!timeSeries) return null;
 
-  // Get data from last 365 days
+  const dates = Object.keys(timeSeries);
+  
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-
+  
   let highClose = -Infinity;
   let lowClose = Infinity;
   let highOpen = -Infinity;
   let lowOpen = Infinity;
+  let dataFound = false;
 
-  dates.forEach((date) => {
+  dates.forEach(date => {
     const dateObj = new Date(date);
-
-    // Only include data from last year
+    
+    // Process data if it's within the last year
     if (dateObj >= oneYearAgo) {
       const day = timeSeries[date];
-      const open = parseFloat(day["1. open"]);
-      const close = parseFloat(day["4. close"]);
-
+      const open = parseFloat(day['1. open']);
+      const close = parseFloat(day['4. close']);
+      
       if (close > highClose) highClose = close;
       if (close < lowClose) lowClose = close;
       if (open > highOpen) highOpen = open;
       if (open < lowOpen) lowOpen = open;
+      dataFound = true;
     }
   });
 
+  // If no data was found in the range, return null or zeros
+  if (!dataFound) return null;
+
   return {
-    highClose: highClose,
+    highClose: highClose, // Returning raw numbers as we discussed!
     lowClose: lowClose,
     highOpen: highOpen,
-    lowOpen: lowOpen,
+    lowOpen: lowOpen
   };
 }
 
@@ -389,7 +395,7 @@ addStockForm.addEventListener("submit", async (e) => {
       .select("id")
       .eq("user_id", user.id)
       .eq("symbol", symbol)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       alert(`${symbol} is already in your watchlist!`);
@@ -432,7 +438,6 @@ addStockForm.addEventListener("submit", async (e) => {
     if (statsError) throw statsError;
 
     // Success! Reload the watchlist
-    alert(`Successfully added ${symbol}!`);
     addStockForm.reset();
     loadWatchlist();
   } catch (error) {
