@@ -2,6 +2,8 @@
 
 A simple web application to track stocks and view their highest/lowest opening and closing prices.
 
+<img src="assets/dashboard-screenshot.png" alt="Dashboard" width="600">
+
 ## 🚀 Features
 - User authentication (sign up/login)
 - Add stocks to your personal watchlist
@@ -35,7 +37,7 @@ A simple web application to track stocks and view their highest/lowest opening a
 ## 🔧 Technologies Used
 - HTML/CSS/JavaScript (Vanilla)
 - Supabase (Authentication & Database)
-- Stock API (TBD: Finnhub/Alpha Vantage)
+- Alpha Vantage (Stock API)
 - GitHub Pages (Hosting)
 
 ## 📝 Database Schema
