@@ -202,7 +202,7 @@ async function fetchStockData(symbol) {
 }
 
 // Calculate yearly highs and lows from time series data
-function calculateYearlyStats(timeSeriesData) {
+function calculateStats(timeSeriesData) {
   const timeSeries = timeSeriesData['Time Series (Daily)'];
   if (!timeSeries) return null;
 
@@ -409,7 +409,7 @@ addStockForm.addEventListener("submit", async (e) => {
     const stockData = await fetchStockData(symbol);
 
     // Calculate yearly stats
-    const stats = calculateYearlyStats(stockData);
+    const stats = calculateStats(stockData);
 
     // Add to watchlist table
     submitBtn.textContent = "Saving...";
