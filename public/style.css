@@ -187,3 +187,14 @@ th, td {
   opacity: 0.8;
   text-decoration: underline;
 }
+
+.card-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-header-row h3 {
+  margin: 0;
+}

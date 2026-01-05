@@ -203,29 +203,29 @@ async function fetchStockData(symbol) {
 
 // Calculate yearly highs and lows from time series data
 function calculateStats(timeSeriesData) {
-  const timeSeries = timeSeriesData['Time Series (Daily)'];
+  const timeSeries = timeSeriesData["Time Series (Daily)"];
   if (!timeSeries) return null;
 
   const dates = Object.keys(timeSeries);
-  
+
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
-  
+
   let highClose = -Infinity;
   let lowClose = Infinity;
   let highOpen = -Infinity;
   let lowOpen = Infinity;
   let dataFound = false;
 
-  dates.forEach(date => {
+  dates.forEach((date) => {
     const dateObj = new Date(date);
-    
+
     // Process data if it's within the last year
     if (dateObj >= oneYearAgo) {
       const day = timeSeries[date];
-      const open = parseFloat(day['1. open']);
-      const close = parseFloat(day['4. close']);
-      
+      const open = parseFloat(day["1. open"]);
+      const close = parseFloat(day["4. close"]);
+
       if (close > highClose) highClose = close;
       if (close < lowClose) lowClose = close;
       if (open > highOpen) highOpen = open;
@@ -241,7 +241,7 @@ function calculateStats(timeSeriesData) {
     highClose: highClose, // Returning raw numbers as we discussed!
     lowClose: lowClose,
     highOpen: highOpen,
-    lowOpen: lowOpen
+    lowOpen: lowOpen,
   };
 }
 
@@ -280,6 +280,11 @@ async function loadWatchlist() {
       .eq("user_id", user.id)
       .order("created_at", { ascending: false });
 
+    const countPill = document.getElementById("stock-count-pill");
+    if (countPill) {
+      countPill.textContent = `${watchlist?.length || 0} / 10`;
+    }
+
     if (error) throw error;
 
     if (!watchlist || watchlist.length === 0) {
@@ -315,10 +320,46 @@ async function loadWatchlist() {
   `;
       })
       .join("");
+    watchlist.forEach((item) => {
+      const stats = Array.isArray(item.stock_stats)
+        ? item.stock_stats[0]
+        : item.stock_stats;
+
+      if (isDataStale(stats?.last_updated)) {
+        console.log(`Refreshing stale data for ${item.symbol}...`);
+        refreshStockStats(item.symbol, user.id);
+      }
+    });
   } catch (error) {
     console.error("Error loading watchlist:", error);
     tbody.innerHTML =
       '<tr><td colspan="7" class="muted">Error loading stocks. Please refresh.</td></tr>';
+  }
+}
+
+async function refreshStockStats(symbol, userId) {
+  try {
+    const stockData = await fetchStockData(symbol);
+    const stats = calculateStats(stockData);
+
+    const { error } = await supabaseClient
+      .from("stock_stats")
+      .update({
+        highest_close: stats.highClose,
+        lowest_close: stats.lowClose,
+        highest_open: stats.highOpen,
+        lowest_open: stats.lowOpen,
+        last_updated: new Date().toISOString(),
+      })
+      .eq("user_id", userId)
+      .eq("symbol", symbol);
+
+    if (error) throw error;
+
+    // Optional: Refresh the table row for this stock without reloading the whole page
+    console.log(`Successfully updated ${symbol}`);
+  } catch (err) {
+    console.error(`Failed to background refresh ${symbol}:`, err.message);
   }
 }
 
@@ -364,6 +405,15 @@ document.getElementById("stocks-tbody").addEventListener("click", async (e) => {
   }
 });
 
+function isDataStale(lastUpdated) {
+  if (!lastUpdated) return true;
+
+  const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const updatedAt = new Date(lastUpdated);
+
+  return updatedAt < twentyFourHoursAgo;
+}
+
 // Add Stock
 addStockForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -388,6 +438,23 @@ addStockForm.addEventListener("submit", async (e) => {
       data: { user },
     } = await supabaseClient.auth.getUser();
     if (!user) throw new Error("Not authenticated");
+
+    // Check current watchlist count
+    const { count, error: countError } = await supabaseClient
+      .from("watchlists")
+      .select("*", { count: "exact", head: true }) // head: true means "just get the count, not the data"
+      .eq("user_id", user.id);
+
+    if (countError) throw countError;
+
+    if (count >= 10) {
+      alert(
+        "Watchlist limit reached! Please remove a stock before adding a new one."
+      );
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalBtnText;
+      return;
+    }
 
     // Check if stock already exists in watchlist
     const { data: existing } = await supabaseClient
