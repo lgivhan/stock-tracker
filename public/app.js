@@ -214,6 +214,10 @@ async function fetchStockData(symbol) {
       throw new Error("Invalid stock symbol");
     }
 
+    if (data["Note"]) {
+      throw new Error("Daily API limit reached (25 calls). Try again tomorrow!");
+    }
+
     if (!data["Time Series (Daily)"]) {
       throw new Error("Unable to fetch stock data");
     }
