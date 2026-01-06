@@ -128,7 +128,7 @@ signupForm.addEventListener("submit", async (e) => {
     signupMsg.textContent = `Error: ${error.message}`;
     signupMsg.style.color = "#ef4444";
   } else {
-    signupMsg.textContent = "Please check your inbox for a confirmation email to create your account!";
+    signupMsg.textContent = "Success! Please check your inbox for a confirmation email to login!";
     signupMsg.style.color = "#10b981";
   }
 });
