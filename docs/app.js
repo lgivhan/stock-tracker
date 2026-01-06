@@ -29,6 +29,27 @@ const userPill = document.getElementById("user-pill");
 // DOM Elements - Buttons & Links
 const logoutBtn = document.getElementById("btn-logout");
 
+function getRelativeTime(dateString) {
+  if (!dateString) return "Never";
+
+  const now = new Date();
+  const updated = new Date(dateString);
+  const diffInSeconds = Math.floor((now - updated) / 1000);
+
+  if (diffInSeconds < 60) return "just now";
+
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) return `${diffInHours}h ago`;
+
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) return `${diffInDays}d ago`;
+
+  return updated.toLocaleDateString(); // Fallback for older data
+}
+
 // ============================================
 // VIEW SWITCHING
 // ============================================
@@ -128,7 +149,8 @@ signupForm.addEventListener("submit", async (e) => {
     signupMsg.textContent = `Error: ${error.message}`;
     signupMsg.style.color = "#ef4444";
   } else {
-    signupMsg.textContent = "Success! Please check your inbox for a confirmation email to login!";
+    signupMsg.textContent =
+      "Success! Please check your inbox for a confirmation email to login!";
     signupMsg.style.color = "#10b981";
   }
 });
@@ -292,9 +314,7 @@ async function loadWatchlist() {
         const stats = Array.isArray(item.stock_stats)
           ? item.stock_stats[0]
           : item.stock_stats;
-        const updated = stats?.last_updated
-          ? new Date(stats.last_updated).toLocaleDateString()
-          : "Never";
+        const updated = getRelativeTime(stats?.last_updated);
 
         return `
     <tr data-id="${item.id}" data-symbol="${item.symbol}">
