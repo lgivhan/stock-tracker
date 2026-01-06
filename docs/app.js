@@ -128,15 +128,8 @@ signupForm.addEventListener("submit", async (e) => {
     signupMsg.textContent = `Error: ${error.message}`;
     signupMsg.style.color = "#ef4444";
   } else {
-    signupMsg.textContent = "Account created! You can now log in.";
+    signupMsg.textContent = "Please check your inbox for a confirmation email to create your account!";
     signupMsg.style.color = "#10b981";
-
-    // Switch to login view after 2 seconds
-    setTimeout(() => {
-      showLoginView();
-      signupForm.reset();
-      signupMsg.textContent = "";
-    }, 2000);
   }
 });
 
