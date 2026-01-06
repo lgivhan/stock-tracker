@@ -29,6 +29,11 @@ const userPill = document.getElementById("user-pill");
 // DOM Elements - Buttons & Links
 const logoutBtn = document.getElementById("btn-logout");
 
+// Track API calls per Alpha Vantage Free Stock API limit
+let apiCallsToday = 0;
+const MAX_API_CALLS = 25;
+
+// Calculate last data update
 function getRelativeTime(dateString) {
   if (!dateString) return "Never";
 
@@ -48,6 +53,17 @@ function getRelativeTime(dateString) {
   if (diffInDays < 7) return `${diffInDays}d ago`;
 
   return updated.toLocaleDateString(); // Fallback for older data
+}
+
+// Track API call count per limit
+function updateApiCounter() {
+  const counterEl = document.getElementById('api-counter');
+  if (counterEl) {
+    counterEl.textContent = `API calls today: ${apiCallsToday}/${MAX_API_CALLS}`;
+    if (apiCallsToday >= MAX_API_CALLS) {
+      counterEl.style.color = '#ef4444'; // red
+    }
+  }
 }
 
 // ============================================
@@ -193,22 +209,18 @@ async function fetchStockData(symbol) {
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log("API Response:", data);
-
     // Check for API errors
     if (data["Error Message"]) {
       throw new Error("Invalid stock symbol");
     }
 
-    if (data["Note"]) {
-      throw new Error(
-        "API rate limit reached. Please wait a minute and try again."
-      );
-    }
-
     if (!data["Time Series (Daily)"]) {
       throw new Error("Unable to fetch stock data");
     }
+
+    // Increment counter on successful call
+    apiCallsToday++;
+    updateApiCounter();
 
     return data;
   } catch (error) {
