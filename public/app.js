@@ -153,12 +153,6 @@ signupForm.addEventListener("submit", async (e) => {
     signupMsg.textContent =
       "Success! Please check your inbox for a confirmation email to login!";
     signupMsg.style.color = "#10b981";
-
-
-
-
-
-
   }
 });
 
