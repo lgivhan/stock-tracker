@@ -217,7 +217,21 @@ async function fetchStockData(symbol) {
   }
 }
 
-// Calculate yearly highs and lows from time series data
+function getLatestClose(timeSeriesData) {
+  const timeSeries = timeSeriesData["Time Series (Daily)"];
+  if (!timeSeries) return null;
+
+  const dates = Object.keys(timeSeries).sort(
+    (a, b) => new Date(b) - new Date(a)
+  );
+
+  const latestDate = dates[0];
+  if (!latestDate) return null;
+
+  const close = parseFloat(timeSeries[latestDate]["4. close"]);
+  return Number.isFinite(close) ? close : null;
+}
+
 function calculateStats(timeSeriesData) {
   const timeSeries = timeSeriesData["Time Series (Daily)"];
   if (!timeSeries) return null;
@@ -253,8 +267,11 @@ function calculateStats(timeSeriesData) {
   // If no data was found in the range, return null or zeros
   if (!dataFound) return null;
 
+  const latestClose = getLatestClose(timeSeriesData);
+
   return {
-    highClose: highClose, // Returning raw numbers as we discussed!
+    latestClose: latestClose,
+    highClose: highClose,
     lowClose: lowClose,
     highOpen: highOpen,
     lowOpen: lowOpen,
@@ -273,7 +290,7 @@ async function loadWatchlist() {
   if (!user) return;
 
   const tbody = document.getElementById("stocks-tbody");
-  tbody.innerHTML = '<tr><td colspan="7" class="muted">Loading...</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="8" class="muted">Loading...</td></tr>';
 
   try {
     // Fetch user's watchlist with stock stats
@@ -285,6 +302,7 @@ async function loadWatchlist() {
         symbol,
         created_at,
         stock_stats (
+          latest_close,
           highest_close,
           lowest_close,
           highest_open,
@@ -305,7 +323,7 @@ async function loadWatchlist() {
 
     if (!watchlist || watchlist.length === 0) {
       tbody.innerHTML =
-        '<tr><td colspan="7" class="muted">No stocks yet. Add one above!</td></tr>';
+        '<tr><td colspan="8" class="muted">No stocks yet. Add one above!</td></tr>';
       return;
     }
 
@@ -320,6 +338,7 @@ async function loadWatchlist() {
         return `
     <tr data-id="${item.id}" data-symbol="${item.symbol}">
       <td><strong>${item.symbol}</strong></td>
+      <td>$${stats?.latest_close ?? "—"}</td>
       <td>$${stats?.highest_close || "—"}</td>
       <td>$${stats?.lowest_close || "—"}</td>
       <td>$${stats?.highest_open || "—"}</td>
@@ -347,7 +366,7 @@ async function loadWatchlist() {
   } catch (error) {
     console.error("Error loading watchlist:", error);
     tbody.innerHTML =
-      '<tr><td colspan="7" class="muted">Error loading stocks. Please refresh.</td></tr>';
+      '<tr><td colspan="8" class="muted">Error loading stocks. Please refresh.</td></tr>';
   }
 }
 
@@ -359,6 +378,7 @@ async function refreshStockStats(symbol, userId) {
     const { error } = await supabaseClient
       .from("stock_stats")
       .update({
+        latest_close: stats.latestClose,
         highest_close: stats.highClose,
         lowest_close: stats.lowClose,
         highest_open: stats.highOpen,
@@ -509,6 +529,7 @@ addStockForm.addEventListener("submit", async (e) => {
         {
           user_id: user.id,
           symbol: symbol,
+          latest_close: parseFloat(stats.latestClose),
           highest_close: parseFloat(stats.highClose),
           lowest_close: parseFloat(stats.lowClose),
           highest_open: parseFloat(stats.highOpen),
