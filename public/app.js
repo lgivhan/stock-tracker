@@ -280,6 +280,50 @@ function calculateStats(timeSeriesData) {
 // WATCHLIST MANAGEMENT
 // ============================================
 
+// Helper function to append a single stock to the table
+function appendStockToTable(item) {
+  const tbody = document.getElementById("stocks-tbody");
+  
+  // Remove "No stocks yet" message if it exists
+  const firstRow = tbody.querySelector('tr');
+  if (firstRow && firstRow.querySelector('td[colspan]')) {
+    tbody.innerHTML = '';
+  }
+  
+  const stats = Array.isArray(item.stock_stats)
+    ? item.stock_stats[0]
+    : item.stock_stats;
+  const updated = getRelativeTime(stats?.last_updated);
+  
+  const row = document.createElement('tr');
+  row.dataset.id = item.id;
+  row.dataset.symbol = item.symbol;
+  row.innerHTML = `
+    <td><strong>${item.symbol}</strong></td>
+    <td>$${stats?.latest_close ?? "—"}</td>
+    <td>$${stats?.highest_close || "—"}</td>
+    <td>$${stats?.lowest_close || "—"}</td>
+    <td>$${stats?.highest_open || "—"}</td>
+    <td>$${stats?.lowest_open || "—"}</td>
+    <td>${updated}</td>
+    <td>
+      <button class="btn btn-secondary btn-delete" data-id="${item.id}">
+        Delete
+      </button>
+    </td>
+  `;
+  
+  // Prepend to show newest stocks first
+  tbody.insertBefore(row, tbody.firstChild);
+  
+  // Update the count pill
+  const countPill = document.getElementById("stock-count-pill");
+  if (countPill) {
+    const currentCount = parseInt(countPill.textContent.split("/")[0]) || 0;
+    countPill.textContent = `${currentCount + 1} / 10`;
+  }
+}
+
 async function loadWatchlist() {
   const {
     data: { user },
@@ -539,7 +583,18 @@ addStockForm.addEventListener("submit", async (e) => {
 
     // Success! Reload the watchlist
     addStockForm.reset();
-    loadWatchlist();
+    appendStockToTable({
+      id: watchlistEntry.id,
+      symbol: symbol,
+      stock_stats: {
+        latest_close: stats.latestClose,
+        highest_close: stats.highClose,
+        lowest_close: stats.lowClose,
+        highest_open: stats.highOpen,
+        lowest_open: stats.lowOpen,
+        last_updated: new Date().toISOString(),
+      },
+    });
   } catch (error) {
     console.error("Error adding stock:", error);
     alert(`Error: ${error.message}`);
