@@ -194,8 +194,6 @@ async function fetchStockData(symbol) {
     const response = await fetch(url);
     const data = await response.json();
 
-    console.log("API Response:", data);
-
     // Check for API errors
     if (data["Error Message"]) {
       throw new Error("Invalid stock symbol");
