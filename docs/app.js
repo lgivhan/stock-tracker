@@ -431,7 +431,17 @@ async function refreshStockStats(symbol, userId) {
       .eq("symbol", symbol);
 
     if (error) throw error;
-
+    // Refresh the specific table row with new stats
+    const row = document.querySelector(`tr[data-symbol="${symbol}"]`);
+    if (row) {
+      const cells = row.querySelectorAll('td');
+      cells[1].textContent = `$${stats.latestClose ?? "—"}`;
+      cells[2].textContent = `$${stats.highClose ?? "—"}`;
+      cells[3].textContent = `$${stats.lowClose ?? "—"}`;
+      cells[4].textContent = `$${stats.highOpen ?? "—"}`;
+      cells[5].textContent = `$${stats.lowOpen ?? "—"}`;
+      cells[6].textContent = getRelativeTime(new Date().toISOString());
+    }
     // Optional: Refresh the table row for this stock without reloading the whole page
     console.log(`Successfully updated ${symbol}`);
   } catch (err) {
