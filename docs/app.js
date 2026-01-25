@@ -283,18 +283,18 @@ function calculateStats(timeSeriesData) {
 // Helper function to append a single stock to the table
 function appendStockToTable(item) {
   const tbody = document.getElementById("stocks-tbody");
-  
+
   // Remove "No stocks yet" message if it exists
   const firstRow = tbody.querySelector('tr');
   if (firstRow && firstRow.querySelector('td[colspan]')) {
     tbody.innerHTML = '';
   }
-  
+
   const stats = Array.isArray(item.stock_stats)
     ? item.stock_stats[0]
     : item.stock_stats;
   const updated = getRelativeTime(stats?.last_updated);
-  
+
   const row = document.createElement('tr');
   row.dataset.id = item.id;
   row.dataset.symbol = item.symbol;
@@ -312,10 +312,10 @@ function appendStockToTable(item) {
       </button>
     </td>
   `;
-  
+
   // Prepend to show newest stocks first
   tbody.insertBefore(row, tbody.firstChild);
-  
+
   // Update the count pill
   const countPill = document.getElementById("stock-count-pill");
   if (countPill) {
@@ -395,16 +395,16 @@ async function loadWatchlist() {
   `;
       })
       .join("");
-    watchlist.forEach((item) => {
+    for (const item of watchlist) {
       const stats = Array.isArray(item.stock_stats)
         ? item.stock_stats[0]
         : item.stock_stats;
 
       if (isDataStale(stats?.last_updated)) {
         console.log(`Refreshing stale data for ${item.symbol}...`);
-        refreshStockStats(item.symbol, user.id);
+        await refreshStockStats(item.symbol, user.id);
       }
-    });
+    }
   } catch (error) {
     console.error("Error loading watchlist:", error);
     tbody.innerHTML =
