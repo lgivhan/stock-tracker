@@ -85,6 +85,7 @@ function showDashboardView(user) {
   forgotView.hidden = true;
   dashboardView.hidden = false;
   logoutBtn.hidden = false;
+  history.pushState(null, '', '/dashboard');
 
   // Display user email
   userPill.textContent = user.email;
@@ -395,6 +396,7 @@ async function loadWatchlist() {
   `;
       })
       .join("");
+
     for (const item of watchlist) {
       const stats = Array.isArray(item.stock_stats)
         ? item.stock_stats[0]

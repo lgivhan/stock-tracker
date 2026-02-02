@@ -85,6 +85,7 @@ function showDashboardView(user) {
   forgotView.hidden = true;
   dashboardView.hidden = false;
   logoutBtn.hidden = false;
+  history.pushState(null, '', '/dashboard');
 
   // Display user email
   userPill.textContent = user.email;
