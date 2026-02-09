@@ -4,11 +4,36 @@
 
 // Setup type definitions for built-in Supabase Runtime APIs
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 serve(async () => {
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+  )
+
+  const { data: watchlists, error } = await supabase
+    .from("watchlists")
+    .select("id, user_id, symbol")
+
+  const uniqueSymbols = [
+    ...new Set(watchlists.map(w => w.symbol))
+  ]
+
+  if (error) {
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { status: 500 }
+    )
+  }
+
   return new Response(
-    JSON.stringify({ status: "ok", message: "update stocks function running" }),
-    { headers: { "Content-Type": "application/json" } },
+    JSON.stringify({
+      totalWatchlists: watchlists.length,
+      uniqueSymbolCount: uniqueSymbols.length,
+      symbols: uniqueSymbols
+    }),
+    { headers: { "Content-Type": "application/json" } }
   )
 })
 

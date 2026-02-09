@@ -50,12 +50,14 @@ A simple web application to track stocks and view their highest/lowest opening a
 
 ### stock_stats
 - `id` (uuid, primary key)
+- `watchlist_id` (uuid, FK -> watchlists.id, ON DELETE CASCADE)
 - `user_id` (uuid, references auth.users)
 - `symbol` (text)
-- `highest_close` (decimal)
-- `lowest_close` (decimal)
-- `highest_open` (decimal)
-- `lowest_open` (decimal)
+- `highest_close` (numeric)
+- `lowest_close` (numeric)
+- `highest_open` (numeric)
+- `lowest_open` (numeric)
+- `latest_close` (numeric)
 - `last_updated` (timestamp)
 
 ## 🔐 Security Note
