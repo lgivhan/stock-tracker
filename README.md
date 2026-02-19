@@ -4,6 +4,8 @@ A simple web application to track stocks and view their highest/lowest opening a
 
 <img src="assets/dashboard-screenshot.png" alt="Dashboard" width="600">
 
+[TRY IT NOW ->](https://lgivhan.github.io/stock-tracker/)
+
 ## 🚀 Features
 - User authentication (sign up/login)
 - Add stocks to your personal watchlist
