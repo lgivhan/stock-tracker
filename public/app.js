@@ -344,7 +344,7 @@ async function loadWatchlist() {
         id,
         symbol,
         created_at,
-        stock_stats (
+        stock_stats!stock_stats_watchlist_id_fkey (
           latest_close,
           highest_close,
           lowest_close,
